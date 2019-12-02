@@ -1,3 +1,4 @@
-diplomatiki
-Athina Ioakeimidi
-2019-2020
+# Test-case Generation
+
+Undergrad thesis by **Athina Ioakeimidi**
+NTUA 2019-2020
