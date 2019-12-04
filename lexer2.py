@@ -27,7 +27,7 @@ def makeCorrect(draw, data):
 	
 	#Grouping — ()
 	if isinstance(data[0], list):
-		return draw(makeCorrect(data[0]))
+		return draw(makeCorrect(data[0])) + draw(makeCorrect(data[1:]))
 		
 	#OR operator — []		
 	if data[0] == "[":
@@ -51,9 +51,10 @@ def makeCorrect(draw, data):
 	return [data[0]] + draw(makeCorrect(data[1:]))
 
 @st.composite	
-def correct(draw, orig):
+def correct(draw, data):
 	cor = draw(makeCorrect(data))
 	return("".join(cor))
+
 
 while (1):
 	orig = input("Give your reg expr: ")
@@ -61,7 +62,7 @@ while (1):
 	data = parse(orig)
 	print("Some correct inputs:")
 
-	@given(t=correct(orig))
+	@given(t=correct(data))
 	def runCor(t):
 		#check if t matches the regexpr
 		assert re.match(r"^"+orig+"$", t), ("Generated string \"" + t + "\" does not match regexpr \"" + orig + "\"")
@@ -73,12 +74,15 @@ while (1):
 	info = getInfo(orig)
 	print("Some wrong inputs:")
 	
-	@given(t=wrong(orig))
+	@given(t=wrong(data, info))
 	def runWro(t):
+		#check if t doesn't match the regexpr
+		assert (not re.match(r"^"+orig+"$", t)), ("Generated string \"" + t + "\" matches regexpr \"" + orig + "\"")
 		print(t)
 		
 	runWro()
 	'''
+	
 	
 	print()
 	

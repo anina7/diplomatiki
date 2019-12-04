@@ -19,7 +19,7 @@ def corRecur(data):
 	
 	#Grouping — ()	
 	if isinstance(data[0], list):
-		return corRecur(data[0])
+		return corRecur(data[0]) + corRecur(data[1:])
 	
 	#OR operator — []		
 	if data[0] == "[":
@@ -71,7 +71,7 @@ def wroRecur(data, info):
 	
 	#Grouping — ()	
 	if isinstance(data[0], list):
-		return wroRecur(data[0], info)
+		return wroRecur(data[0], info) + wroRecur(data[1:], info)
 	
 	#OR operator — []		
 	if data[0] == "[":
