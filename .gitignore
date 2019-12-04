@@ -1,4 +1,18 @@
+# Backup files
 
+*~
+*.bak
+*.swp
+\#*\#
+
+# Mac OS specific
+
+.DS_Store
+
+# Python specific
+
+*.py[cod]
+/venv/
 __pycache__/
 
 .hypothesis/
