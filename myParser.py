@@ -15,11 +15,11 @@ def parse(expr):
                 items.append(item)
         return items, False
     return _helper(iter(expr))[0]
-	
 
 
 
-from collections import OrderedDict 
+
+from collections import OrderedDict
 
 def getInfo(data):
 	#get original data and remove special characters
@@ -29,4 +29,3 @@ def getInfo(data):
 	minus4 = minus3.replace("[", "")
 	minus5 = minus4.replace("]", "")
 	return "".join(set(minus5))
-	
