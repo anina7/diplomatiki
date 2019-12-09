@@ -98,6 +98,49 @@ class GenCorrectVisitor(RegExpVisitor):
 def correct(draw, r, size=50):
     return GenCorrectVisitor().visit(r, draw, size)
 
+class GenWrongVisitor(RegExpVisitor):
+    def visit_REempty(self, node, draw, n):
+        return ""
+
+    def visit_REsymbol(self, node, draw, n):
+        az09 = "abc"
+        #az09 = "abcdef0123456789" #THIS IS TOO MUCH FOR HYPOTHESIS
+        minus = az09.replace(node.symbol, "")
+        return draw(st.one_of(
+            st.characters(whitelist_categories=[], whitelist_characters=minus),
+            st.text(max_size=0) #return ""
+        ))
+
+    def visit_REconcat(self, node, draw, n):
+        #frequency doesn't exist, so unless i draw an integer treat it as a probability i can't choose frequencies
+        k = draw(st.integers(min_value=0, max_value=n))
+        return draw(st.one_of(
+            st.just(self.visit(node.left, draw, k) + GenCorrectVisitor().visit(node.right, draw, n-k)),
+            st.just(GenCorrectVisitor().visit(node.left, draw, k) + self.visit(node.right, draw, n-k)),
+            st.just(self.visit(node.left, draw, k) + self.visit(node.right, draw, n-k))
+        ))
+
+    def visit_REalt(self, node, draw, n):
+        return draw(st.one_of(st.just(self.visit(node.left, draw, n)),
+                              st.just(self.visit(node.right, draw, n))))
+
+    def visit_REstar(self, node, draw, n):
+        k = draw(st.integers(min_value=0, max_value=n))
+        k2 = max(1, k)
+        nk = n // k2
+        c = draw(st.integers(min_value=0, max_value=k2-1))
+        cs = ''.join(GenCorrectVisitor().visit(node.expr, draw, nk) for _ in range(c))
+        w = self.visit(node.expr, draw, nk)
+        ss = ''.join(self.visit(node.expr, draw, nk) for _ in range(k2-c-1))
+        return cs + w + ss
+
+@st.composite
+def wrong(draw, r, size=50):
+    s = GenWrongVisitor().visit(r, draw, size)
+    while re.match(r"^"+str(r)+"$", s):
+        s = GenWrongVisitor().visit(r, draw, size)
+    return s
+
 def test(r):
     @given(s=correct(r))
     def test_correct(s):
@@ -106,11 +149,18 @@ def test(r):
             "Generated string \"{}\" does not match regexp {}".format(s, r)
         print(s)
 
+    @given(s=wrong(r))
+    def test_wrong(s):
+        # Check if s doesn't match r.
+        assert not re.match(r"^"+str(r)+"$", s), \
+            "Generated string \"{}\" matches regexp {}".format(s, r)
+        print(s)
+    
     print('Testing:', r)
     print('Some correct inputs:')
     test_correct()
-    #print('Some wrong inputs:')
-    #test_wrong()
+    print('Some wrong inputs:')
+    test_wrong()
 
 if __name__ == '__main__':
     test(REconcat(REsymbol('0'), REstar(REsymbol('1'))))
