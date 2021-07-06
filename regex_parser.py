@@ -97,7 +97,7 @@ GRAMMAR:
 expr    : term | term   # ALT
         | term
         
-term    : factor factor   # CONCAT
+term    : factor term   # CONCAT
         | factor
 
 factor  : id *          # STAR
@@ -173,9 +173,10 @@ class Parser:
 class State:
     def __init__(self, name):
         self.name = name
-        self.epsilon = [] # epsilon-closure
-        self.transitions = {} # char : state
+        self.epsilon = []       # epsilon-closure
+        self.transitions = {}   # char : state
         self.is_end = False
+        self.original = []      #only for dfa
         
     def __str__(self):
         return self.name
@@ -268,7 +269,7 @@ def regex_to_NFA(regex):
     NodeVisitor().visit(nodes, nfa_stack, state_list)
     nfa = nfa_stack.pop()
     
-    return state_list, alphabet, nfa.start.name
+    return state_list, alphabet, nfa.start
 
 '''
 if __name__ == '__main__':
