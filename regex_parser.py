@@ -3,6 +3,7 @@
 DIGITS = '0123456789'
 
 # TOKENS
+TT_EOF      = 'EOF'
 TT_CHAR     = 'CHAR'
 TT_CONCAT   = 'CONCAT'
 TT_ALT      = 'ALT'
@@ -94,14 +95,14 @@ class UnaryOpNode:
 
 '''
 GRAMMAR:
-expr    : term | term   # ALT
+expr    : expr | term   # ALT
         | term
 
-term    : factor term   # CONCAT
+term    : term factor   # CONCAT
         | factor
 
-factor  : id *          # STAR
-        | id +          # PLUS
+factor  : factor *      # STAR
+        | factor +      # PLUS
         | id
 
 id      : CHAR          # CHAR
@@ -118,6 +119,8 @@ class Parser:
         self.tok_idx += 1
         if self.tok_idx < len(self.tokens):
             self.current_tok = self.tokens[self.tok_idx]
+        else:
+            self.current_tok = Token(TT_EOF, None)
         return self.current_tok
 
     def parse(self):
@@ -125,39 +128,45 @@ class Parser:
 
     # GRAMMAR
     def expr(self):
+        """
+        expr ::= term ( "|" term )*
+        """
         left = self.term()
-
-        if self.current_tok.type == TT_ALT:
+        while self.current_tok.type == TT_ALT:
             op_tok = self.current_tok
             self.advance()
             right = self.term()
             left = BinOpNode(left, op_tok, right)
-
         return left
 
     def term(self):
+        """
+        term ::= factor+
+        """
         left = self.factor()
-
-        if self.current_tok.type not in [TT_ALT, TT_RPAREN] \
-            and self.tok_idx < len(self.tokens):
+        while self.current_tok.type not in [TT_ALT, TT_RPAREN, TT_EOF]:
             op_tok = Token(TT_CONCAT)
             self.tokens.insert(self.tok_idx, op_tok)
             self.advance()
             right = self.term()
             left = BinOpNode(left, op_tok, right)
-
         return left
 
     def factor(self):
+        """
+        factor ::= id ("*" | "+")*
+        """
         left = self.id()
-
-        if self.current_tok.type in [TT_STAR, TT_PLUS]:
+        while self.current_tok.type in [TT_STAR, TT_PLUS]:
             op_tok = self.current_tok
+            self.advance()
             left = UnaryOpNode(left, op_tok)
-
         return left
 
     def id(self):
+        """
+        id ::= char | "(" expr ")"
+        """
         if self.current_tok.type == TT_CHAR:
             char = self.current_tok.value
             self.advance()
@@ -166,9 +175,11 @@ class Parser:
         elif self.current_tok.type == TT_LPAREN:
             self.advance()
             expr = self.expr()
-            if self.current_tok.type == TT_RPAREN:
-                self.advance()
-                return expr
+            assert self.current_tok.type == TT_RPAREN, "missing ')'"
+            self.advance()
+            return expr
+
+        assert False, "unexpected {}".format(self.current_tok)
 
 class State:
     def __init__(self, name):
