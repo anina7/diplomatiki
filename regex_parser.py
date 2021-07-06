@@ -18,8 +18,8 @@ class Token:
     
     def __repr__(self):
         if self.value:
-            return self.type + ":" + self.value
-        return self.type
+            return f'{self.type}:{self.value}'
+        return f'{self.type}'
 
 class Lexer:
     def __init__(self, text):
@@ -39,9 +39,9 @@ class Lexer:
             if self.current_char in DIGITS:
                 tokens.append(Token(TT_CHAR, self.current_char))
                 self.advance()
-            elif self.current_char == '\x08':
-                tokens.append(Token(TT_CONCAT))
-                self.advance()
+            #elif self.current_char == '\x08':
+            #    tokens.append(Token(TT_CONCAT))
+            #    self.advance()
             elif self.current_char == '|':
                 tokens.append(Token(TT_ALT))
                 self.advance()
@@ -60,31 +60,37 @@ class Lexer:
 
         return tokens
 
-#NODES
+    def get_ab(self, tokens):
+        alphabet = []
+        for t in tokens:
+            if t.type == TT_CHAR:
+                alphabet.append(t.value)
+        return sorted(set(alphabet))
 
+#NODES
 class CharNode:
-    def __init__(self, tok):
-        self.tok = tok
+    def __init__(self, value):
+        self.value = value
 
     def __repr__(self):
-        return f'{self.tok}'
+        return f'{self.value}'
 
 class BinOpNode:
-    def __init__(self, left_node, op_tok, right_node):
-        self.left_node = left_node
+    def __init__(self, left, op_tok, right):
+        self.left = left
         self.op_tok = op_tok
-        self.right_node = right_node
+        self.right = right
 
     def __repr__(self):
-        return f'({self.left_node}, {self.op_tok}, {self.right_node})'
+        return f'({self.left}, {self.op_tok}, {self.right})'
 
 class UnaryOpNode:
-    def __init__(self, node, op_tok):
-        self.node = node
+    def __init__(self, left, op_tok):
+        self.left = left
         self.op_tok = op_tok
 
     def __repr__(self):
-        return f'({self.node}, {self.op_tok})'
+        return f'({self.left}, {self.op_tok})'
 
 '''
 GRAMMAR:
@@ -95,6 +101,7 @@ term    : factor term   # CONCAT
         | factor
 
 factor  : id *          # STAR
+        | id +          # PLUS
         | id
 
 id      : CHAR          # CHAR
@@ -132,7 +139,7 @@ class Parser:
         left = self.factor()
         
         if self.current_tok.type in (TT_CHAR, TT_LPAREN):
-            op_tok = Token(TT_CONCAT, '\x08')
+            op_tok = Token(TT_CONCAT)
             self.tokens.append(op_tok)  # len(tokens) += 1
             right = self.term()
             left = BinOpNode(left, op_tok, right)
@@ -150,7 +157,7 @@ class Parser:
     
     def id(self):
         if self.current_tok.type == TT_CHAR:
-            char = self.current_tok
+            char = self.current_tok.value
             self.advance()
             return CharNode(char)
 
@@ -161,20 +168,127 @@ class Parser:
                 self.advance()
                 return expr
 
-    
+class State:
+    def __init__(self, name):
+        self.name = name
+        self.epsilon = [] # epsilon-closure
+        self.transitions = {} # char : state
+        self.is_end = False
+        
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return str(self)
+
+class NFA:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end # start and end states
+        end.is_end = True
+
+class NodeVisitor():
+    def visit(self, node, nfa_stack, state_list):
+        method_name = f'visit_{type(node).__name__}'
+        method = getattr(self, method_name, self.no_visit_method)
+        return method(node, nfa_stack, state_list)
+
+    def no_visit_method(self, node, nfa_stack, state_list):
+        raise Exception(f'No visit_{type(node).__name__} method defined')
+
+    def visit_CharNode(self, node, nfa_stack, state_list):
+        a = State('s' + str(len(state_list)))
+        state_list.append(a)
+        b = State('s' + str(len(state_list)))
+        state_list.append(b)
+        
+        a.transitions[node.value] = b
+        nfa = NFA(a, b)
+        nfa_stack.append(nfa)
 
 
-def run(text):
-    lexer = Lexer(text)
+    def visit_BinOpNode(self, node, nfa_stack, state_list):
+        self.visit(node.left, nfa_stack, state_list)
+        self.visit(node.right, nfa_stack, state_list)
+        
+        if node.op_tok.type == TT_CONCAT:
+            b = nfa_stack.pop()
+            a = nfa_stack.pop()
+            a.end.is_end = False
+            a.end.epsilon.append(b.start)
+            nfa = NFA(a.start, b.end)
+            nfa_stack.append(nfa)
+            
+        elif node.op_tok.type == TT_ALT:
+            b = nfa_stack.pop()
+            a = nfa_stack.pop()
+            
+            x = State('s' + str(len(state_list)))
+            state_list.append(x)
+            x.epsilon = [a.start, b.start]
+            
+            y = State('s' + str(len(state_list)))
+            state_list.append(y)
+            
+            a.end.epsilon.append(y)
+            b.end.epsilon.append(y)
+            a.end.is_end = False
+            b.end.is_end = False
+            nfa = NFA(x, y)
+            nfa_stack.append(nfa)
+            
+    def visit_UnaryOpNode(self, node, nfa_stack, state_list):
+        self.visit(node.left, nfa_stack, state_list)
+        
+        a = nfa_stack.pop()
+        x = State('s' + str(len(state_list)))
+        state_list.append(x)
+            
+        y = State('s' + str(len(state_list)))
+        state_list.append(y)
+        
+        x.epsilon = [a.start]
+        if node.op_tok.type == TT_STAR:
+            x.epsilon.append(y)
+        a.end.epsilon.extend([y, a.start])
+        a.end.is_end = False
+        nfa = NFA(x, y)
+        nfa_stack.append(nfa)
+
+def regex_to_NFA(regex):
+    lexer = Lexer(regex)
     tokens = lexer.make_tokens()
-
-    # Generate AST
+    alphabet = lexer.get_ab(tokens)
+    
     parser = Parser(tokens)
-    ast = parser.parse()
+    nodes = parser.parse()
+    
+    nfa_stack = []
+    state_list = []
+    NodeVisitor().visit(nodes, nfa_stack, state_list)
+    nfa = nfa_stack.pop()
+    
+    return state_list, alphabet, nfa.start.name
 
-    return ast
-
+'''
 if __name__ == '__main__':
     while True:
         regex = str(input())
-        print(run(regex))
+        state_list, initial = regex_to_NFA(regex)
+        
+        final = [s for s in state_list if s.is_end]
+        
+        nfaPrint = NFAprint(state_list, alphabet, initial, final)
+        print(nfaPrint)
+        print()
+
+         
+        print("#### NFA ####")
+        print("states:", state_list)
+        print("alphabet:", alphabet)
+        print("initial:", initial)
+        print("final:", final)
+        print()
+'''
+
+
