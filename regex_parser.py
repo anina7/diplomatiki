@@ -97,7 +97,7 @@ GRAMMAR:
 expr    : term | term   # ALT
         | term
         
-term    : factor term   # CONCAT
+term    : factor factor   # CONCAT
         | factor
 
 factor  : id *          # STAR
@@ -138,18 +138,20 @@ class Parser:
     def term(self):
         left = self.factor()
         
-        if self.current_tok.type in (TT_CHAR, TT_LPAREN):
+        if self.current_tok.type not in [TT_ALT, TT_RPAREN] \
+            and self.tok_idx < len(self.tokens):
             op_tok = Token(TT_CONCAT)
-            self.tokens.append(op_tok)  # len(tokens) += 1
+            self.tokens.insert(self.tok_idx, op_tok)
+            self.advance()
             right = self.term()
             left = BinOpNode(left, op_tok, right)
-            
+        
         return left
 
     def factor(self):
         left = self.id()
         
-        if self.current_tok.type in (TT_STAR, TT_PLUS):
+        if self.current_tok.type in [TT_STAR, TT_PLUS]:
             op_tok = self.current_tok
             left = UnaryOpNode(left, op_tok)    
     
@@ -206,23 +208,20 @@ class NodeVisitor():
         nfa = NFA(a, b)
         nfa_stack.append(nfa)
 
-
     def visit_BinOpNode(self, node, nfa_stack, state_list):
         self.visit(node.left, nfa_stack, state_list)
         self.visit(node.right, nfa_stack, state_list)
         
+        b = nfa_stack.pop()
+        a = nfa_stack.pop()
+        
         if node.op_tok.type == TT_CONCAT:
-            b = nfa_stack.pop()
-            a = nfa_stack.pop()
             a.end.is_end = False
             a.end.epsilon.append(b.start)
             nfa = NFA(a.start, b.end)
             nfa_stack.append(nfa)
             
         elif node.op_tok.type == TT_ALT:
-            b = nfa_stack.pop()
-            a = nfa_stack.pop()
-            
             x = State('s' + str(len(state_list)))
             state_list.append(x)
             x.epsilon = [a.start, b.start]
@@ -262,6 +261,7 @@ def regex_to_NFA(regex):
     
     parser = Parser(tokens)
     nodes = parser.parse()
+    print(nodes)
     
     nfa_stack = []
     state_list = []
