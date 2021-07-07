@@ -2,6 +2,7 @@
 
 from regex_parser import DIGITS, State, regex_to_NFAb
 import hypothesis.strategies as st
+import itertools
 
 class NFA:
     def __init__(self, states, alphabet, initial, final):
@@ -100,6 +101,76 @@ class DFA:
             ))
         return "\n".join(L)
 
+    def minimize(self):
+        S = []  #same type
+        T = []  #different type
+        
+        comb = itertools.combinations(self.states, 2)
+        for c in comb:
+            if (c[0] in self.final) == (c[1] in self.final):
+                S.append((c[0], c[1]))
+            else:
+                T.append((c[0], c[1]))
+        
+        Sremove = []
+        for c in S:
+            for i in self.alphabet:
+                delta0 = self.transition[c[0]].get(i)
+                delta1 = self.transition[c[1]].get(i)
+                
+                if (delta0, delta1) in T or (delta1, delta0) in T or (delta0 and not delta1) or (not delta0 and delta1):  #not delta0 or not delta1 or 
+                    Sremove.append(c)
+                    T.append(c)
+                    break
+        
+        unpackS = list(itertools.chain(*[x for x in S if x not in Sremove]))
+        equals_last = [x for x in unpackS if x.is_end]
+        equals_not = [x for x in unpackS if not x.is_end]
+        
+        min_state_list = []     #list of new states for minimized dfa
+        mindfa_origstates = []  #original states in the same order as min_state_list
+        for st in self.states:
+            if equals_last and st == equals_last[0]:
+                a = State('q' + str(len(min_state_list)))
+                a.original = equals_last    #list of original dfa states
+                a.transitions = {x: self.transition[s].get(x) for x in self.alphabet for s in a.original}
+                a.is_end = True
+                min_state_list.append(a)
+                mindfa_origstates.append(a.original)
+                
+            elif equals_not and st == equals_not[0]:
+                a = State('q' + str(len(min_state_list)))
+                a.original = equals_not    #list of original dfa states
+                a.transitions = {x: self.transition[s].get(x) for x in self.alphabet for s in a.original}
+                a.is_end = False
+                min_state_list.append(a)
+                mindfa_origstates.append(a.original)
+                
+            elif st not in equals_last and st not in equals_not:
+                a = State('q' + str(len(min_state_list)))
+                a.original = [st]    #list of original dfa states
+                a.transitions = self.transition[st]
+                a.is_end = st.is_end
+                min_state_list.append(a)
+                mindfa_origstates.append(a.original)
+        
+        last = []
+        for s in min_state_list:
+            if s.is_end:
+                last.append(s)
+            if self.initial in s.original:
+                first = s
+        
+            for i in self.alphabet:
+                trans = s.transitions.get(i)
+                if trans:
+                    j, *_ = [k for k in range(len(mindfa_origstates)) if trans in mindfa_origstates[k]]
+                    s.transitions[i] = min_state_list[j]
+                else:
+                    s.transitions[i] = ""
+
+        return DFA(min_state_list, self.alphabet, first, last)
+
     def accepts(self, input):
         s = self.initial
         for x in input:
@@ -164,21 +235,24 @@ def regex_to_DFA(regex):
     
     dfa = nfa.NFAtoDFA()
     
-    return dfa
+    min_dfa = dfa.minimize()
     
-'''
+    return min_dfa
+    
+
 if __name__ == '__main__':
     while True:
         regex = str(input())
 
         nfa = NFA(*regex_to_NFAb(regex))
         
-
         dfa = nfa.NFAtoDFA()
+        print("==== DFA ====")
         print(dfa)
         print()
         
-        s = correct(dfa)
+        s = dfa.minimize()
+        print("==== min DFA ====")
         print(s)
-        #print(dfa.accepts("011"))
-'''
+        print()
+

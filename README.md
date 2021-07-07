@@ -4,7 +4,7 @@ This is a tool that tests lexical analysers by generating random test-cases, bot
 
 
 ## Description
-This tool parses a regular expression from input, converts it to equivalent NFA and converts the NFA to equivalent DFA. Then, using the DFA, it generates positive and negative test-cases for the regular expresion, meaning words that the regular expresion recognises and words that it doesn't.
+This tool parses a regular expression from input, converts it to equivalent NFA and converts the NFA to equivalent DFA. Then, using the DFA, it generates positive and negative test-cases for the regular expresion, namely words that the regular expresion recognises and words that it doesn't.
 
 Developed for my Diploma Thesis, in Electrical and Computer Engineering, NTUA, Greece.
 
@@ -29,9 +29,9 @@ automata.py holds NFA and DFA classes, NFAtoDFA method, generate method
 generate.py runs and prints test-cases
 
 ## Supported regular expressions
-|Supported regular expressions||
+|Regular expressions|Symbols|
 |----|-----|
 |Characters:|0-9, a-z|
 |Alteration:|&#124;|
 |Repetition operators:|*, +|
-|Parenthesis|(, )|
+|Parenthesis:|(, )|
