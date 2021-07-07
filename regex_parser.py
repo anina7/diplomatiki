@@ -1,6 +1,6 @@
 # Token, Lexer, Parser, Nodes from https://github.com/davidcallanan/py-myopl-code
 
-DIGITS = '0123456789'
+DIGITS = '0123456789'   #abcdefghijklmnopqrstuvwxyz
 
 # TOKENS
 TT_EOF      = 'EOF'
@@ -184,7 +184,7 @@ class Parser:
 class State:
     def __init__(self, name):
         self.name = name
-        self.epsilon = []       # epsilon-closure
+        self.epsilon = []       # epsilon-closure / only for nfa
         self.transitions = {}   # char : state
         self.is_end = False
         self.original = []      #only for dfa
@@ -195,7 +195,7 @@ class State:
     def __repr__(self):
         return str(self)
 
-class NFA:
+class NFAbuilder:
     def __init__(self, start, end):
         self.start = start
         self.end = end # start and end states
@@ -217,8 +217,8 @@ class NodeVisitor():
         state_list.append(b)
 
         a.transitions[node.value] = b
-        nfa = NFA(a, b)
-        nfa_stack.append(nfa)
+        nfab = NFAbuilder(a, b)
+        nfa_stack.append(nfab)
 
     def visit_BinOpNode(self, node, nfa_stack, state_list):
         self.visit(node.left, nfa_stack, state_list)
@@ -230,8 +230,8 @@ class NodeVisitor():
         if node.op_tok.type == TT_CONCAT:
             a.end.is_end = False
             a.end.epsilon.append(b.start)
-            nfa = NFA(a.start, b.end)
-            nfa_stack.append(nfa)
+            nfab = NFAbuilder(a.start, b.end)
+            nfa_stack.append(nfab)
 
         elif node.op_tok.type == TT_ALT:
             x = State('s' + str(len(state_list)))
@@ -245,8 +245,8 @@ class NodeVisitor():
             b.end.epsilon.append(y)
             a.end.is_end = False
             b.end.is_end = False
-            nfa = NFA(x, y)
-            nfa_stack.append(nfa)
+            nfab = NFAbuilder(x, y)
+            nfa_stack.append(nfab)
 
     def visit_UnaryOpNode(self, node, nfa_stack, state_list):
         self.visit(node.left, nfa_stack, state_list)
@@ -263,14 +263,14 @@ class NodeVisitor():
             x.epsilon.append(y)
         a.end.epsilon.extend([y, a.start])
         a.end.is_end = False
-        nfa = NFA(x, y)
-        nfa_stack.append(nfa)
+        nfab = NFAbuilder(x, y)
+        nfa_stack.append(nfab)
 
-def regex_to_NFA(regex):
+def regex_to_NFAb(regex):
     lexer = Lexer(regex)
     tokens = lexer.make_tokens()
     alphabet = lexer.get_ab(tokens)
-
+    
     parser = Parser(tokens)
     nodes = parser.parse()
     print(nodes)
@@ -278,9 +278,11 @@ def regex_to_NFA(regex):
     nfa_stack = []
     state_list = []
     NodeVisitor().visit(nodes, nfa_stack, state_list)
-    nfa = nfa_stack.pop()
+    nfab = nfa_stack.pop()
+    
+    final = [str(s) for s in state_list if s.is_end]
 
-    return state_list, alphabet, nfa.start
+    return state_list, alphabet, nfab.start, final
 
 '''
 if __name__ == '__main__':

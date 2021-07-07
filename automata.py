@@ -1,6 +1,6 @@
-from regex_parser import State, regex_to_NFA
+from regex_parser import State, regex_to_NFAb
 
-class NFAprint:
+class NFA:
     def __init__(self, states, alphabet, initial, final):
         self.states = states
         self.alphabet = alphabet
@@ -19,63 +19,61 @@ class NFAprint:
             ))
         return "\n".join(L)
 
-def NFAtoDFA(first, alphabet):
-    state_list = []
-    init = True
+    def NFAtoDFA(self):
+        state_list = []
+        last = []
+        is_first = True
 
-    if first.epsilon:
-        dfa_states = [first.epsilon]
-    else:
-        #if 1st e-closure is empty
-        dfa_states = [[first]]
+        dfa_states = [self.initial.epsilon+[self.initial]]
 
-    incr = 0
-    while incr < len(dfa_states):
-        #get first element of list to check
-        current = dfa_states[incr]
+        incr = 0
+        while incr < len(dfa_states):
+            #get first element of list to check
+            current = dfa_states[incr]
+            
+            dict = {}
+            is_last = False
+            for i in self.alphabet:  #for every input find transitions
+                lista = []
+                for s in current:  # for every state in the e-closure
+                    trans = s.transitions.get(i)
+                    if trans:
+                        lista += [trans] + trans.epsilon
 
-        dict = {}
-        fin = False
-        for i in alphabet:  #for every input find transitions
-            lista = []
-            for s in current:  # for every state in the enclosure
+                    if s.is_end:
+                        is_last = True
+
+                # this is transition for input 'i' for current state
+                dict[i] = lista
+
+                #only add to check unique states
+                if lista and lista not in dfa_states:
+                    dfa_states.append(lista)
+
+            a = State('t' + str(len(state_list)))
+            a.original = current    #list of original nfa states
+            a.transitions = dict
+            a.is_end = is_last
+            
+            if is_last:
+                last.append(a)
+            if is_first:
+                first = a
+                is_first = False
+
+            state_list.append(a)
+            incr += 1
+
+        for s in state_list:
+            for i in self.alphabet:
                 trans = s.transitions.get(i)
                 if trans:
-                    lista += trans.epsilon
+                    j = dfa_states.index(trans)
+                    s.transitions[i] = state_list[j]
+                else:
+                    s.transitions[i] = ""
 
-                if s.is_end:
-                    fin = True
-
-            # this is transition for input 'i' for current state
-            dict[i] = lista
-
-            #only add to check unique states
-            if lista and lista not in dfa_states:
-                dfa_states.append(lista)
-
-        a = State('t' + str(len(state_list)))
-        a.original = current    #list of original nfa states
-        a.transitions = dict
-        a.is_end = fin
-        if fin:
-            final.append(a)
-        if init:
-            initial = a
-            init = False
-
-        state_list.append(a)
-        incr += 1
-
-    for s in state_list:
-        for i in alphabet:
-            trans = s.transitions.get(i)
-            if trans:
-                j = dfa_states.index(trans)
-                s.transitions[i] = state_list[j]
-            else:
-                s.transitions[i] = ""
-
-    return state_list, initial, final
+        return DFA(state_list, self.alphabet, first, last)
 
 class DFA:
     def __init__(self, states, alphabet, initial, final, transition=None):
@@ -108,14 +106,11 @@ class DFA:
 if __name__ == '__main__':
     while True:
         regex = str(input())
-        nfa_state_list, alphabet, initial = regex_to_NFA(regex)
 
-        final = [str(s) for s in nfa_state_list if s.is_end]
-
-        nfaPrint = NFAprint(nfa_state_list, alphabet, initial, final)
-        print(nfaPrint)
+        nfa = NFA(*regex_to_NFAb(regex))
+        print(nfa)
         print()
 
-        dfa_state_list, dfa_initial, dfa_final = NFAtoDFA(initial, alphabet)
-        dfa = DFA(dfa_state_list, alphabet, dfa_initial, dfa_final)
+        dfa = nfa.NFAtoDFA()
         print(dfa)
+        print()
