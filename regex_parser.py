@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Token, Lexer, Parser, Nodes from https://github.com/davidcallanan/py-myopl-code
 
 DIGITS = '0123456789'   #abcdefghijklmnopqrstuvwxyz
@@ -273,7 +275,7 @@ def regex_to_NFAb(regex):
     
     parser = Parser(tokens)
     nodes = parser.parse()
-    print(nodes)
+    #print(nodes)
 
     nfa_stack = []
     state_list = []
