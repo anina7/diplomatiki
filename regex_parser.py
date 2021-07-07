@@ -2,7 +2,7 @@
 
 # Token, Lexer, Parser, Nodes from https://github.com/davidcallanan/py-myopl-code
 
-DIGITS = '0123456789'   #abcdefghijklmnopqrstuvwxyz
+DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz'
 
 # TOKENS
 TT_EOF      = 'EOF'

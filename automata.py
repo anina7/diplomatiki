@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from regex_parser import State, regex_to_NFAb
+from regex_parser import DIGITS, State, regex_to_NFAb
 import hypothesis.strategies as st
 
 class NFA:
@@ -88,7 +88,6 @@ class DFA:
         self.transition = {s: {i: s.transitions.get(i) for i in alphabet if s.transitions.get(i)} for s in states}
         self.valid = {s: [i for i in alphabet if s.transitions.get(i)] for s in states}
         self.invalid = {s: [i for i in alphabet if not s.transitions.get(i)] for s in states}
-        print(self.invalid)
 
     def __str__(self):
         L = ["\t".join([""] + [str(x) for x in self.alphabet] + ["-|", "|-"])]
@@ -134,7 +133,6 @@ class DFA:
                     x = draw(st.sampled_from(choices))
                 elif not valid:
                     #if choises is empty and looking for negative
-                    DIGITS = '0123456789'
                     x = draw(st.sampled_from([x for x in DIGITS if x not in self.alphabet]))
                     
             # If there's nothing better, keep making valid moves.

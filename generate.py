@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import settings, Phase, Verbosity
 import hypothesis.strategies as st
 
-from automata import DFA, regex_to_DFA
+from automata import regex_to_DFA, DFA
 
 @st.composite
 def positive(draw, dfa):
@@ -58,6 +58,13 @@ def test(dfa, test_only=None):
 if __name__ == '__main__':
     while True:
         regex = str(input())
+        
+        if regex == 'EXIT':
+            exit()
+        
+        while not regex:
+            #print()
+            regex = str(input("Please give valid regex: "))
         
         dfa = regex_to_DFA(regex)
         print("Testing DFA:")
