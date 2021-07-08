@@ -65,7 +65,7 @@ class Lexer:
             else:
                 #error handling
                 assert (self.current_char in DIGITS and self.current_char in SYMBOLS),  "invalid character '{}'".format(self.current_char)
-                
+
         return tokens
 
     def get_ab(self, tokens):
@@ -194,7 +194,7 @@ class State:
         self.epsilon = []       # only for nfa: epsilon transitions
         self.transitions = {}   # char : state
         self.is_end = False
-        
+
         self.eclosure = []      # only for nfa: e-closure
         self.original = []      # only for dfa
 
@@ -279,7 +279,7 @@ def regex_to_NFAb(regex):
     lexer = Lexer(regex)
     tokens = lexer.make_tokens()
     alphabet = lexer.get_ab(tokens)
-    
+
     parser = Parser(tokens)
     nodes = parser.parse()
     #print(nodes)
@@ -288,7 +288,7 @@ def regex_to_NFAb(regex):
     state_list = []
     NodeVisitor().visit(nodes, nfa_stack, state_list)
     nfab = nfa_stack.pop()
-    
+
     final = [str(s) for s in state_list if s.is_end]
 
     return state_list, alphabet, nfab.start, final

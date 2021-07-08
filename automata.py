@@ -42,7 +42,7 @@ class NFA:
         while incr < len(dfa_states):
             #get first element of list to check
             current = dfa_states[incr]
-            
+
             dict = {}
             is_last = False
             for i in self.alphabet:  #for every input find transitions
@@ -66,7 +66,7 @@ class NFA:
             a.original = current    #list of original nfa states
             a.transitions = dict
             a.is_end = is_last
-            
+
             if is_last:
                 last.append(a)
             if is_first:
@@ -93,7 +93,7 @@ class DFA:
         self.alphabet = alphabet
         self.initial = initial
         self.final = final
-        
+
         self.transition = {s: {i: s.transitions.get(i) for i in alphabet if s.transitions.get(i)} for s in states}
         self.valid = {s: [i for i in alphabet if s.transitions.get(i)] for s in states}
         self.invalid = {s: [i for i in alphabet if not s.transitions.get(i)] for s in states}
@@ -112,30 +112,30 @@ class DFA:
     def minimize(self):
         S = []  #same type
         T = []  #different type
-        
+
         comb = itertools.combinations(self.states, 2)
         for c in comb:
             if (c[0] in self.final) == (c[1] in self.final):
                 S.append((c[0], c[1]))
             else:
                 T.append((c[0], c[1]))
-        
+
         S.reverse()     #reverse list to start from last    #bug for 0110 due to (delta0, delta1) not yet in T
         Sremove = []
         for c in S:
             for i in self.alphabet:
                 delta0 = self.transition[c[0]].get(i)
                 delta1 = self.transition[c[1]].get(i)
-                
-                if (delta0, delta1) in T or (delta1, delta0) in T or (delta0 and not delta1) or (not delta0 and delta1): 
+
+                if (delta0, delta1) in T or (delta1, delta0) in T or (delta0 and not delta1) or (not delta0 and delta1):
                     Sremove.append(c)
                     T.append(c)
                     break
-        
+
         unpackS = list(itertools.chain(*[x for x in S if x not in Sremove]))    #all states left in S after removal
         equals_last = [x for x in unpackS if x.is_end]
         equals_not = [x for x in unpackS if not x.is_end]
-        
+
         min_state_list = []     #list of new states for minimized dfa
         mindfa_origstates = []  #original states in the same order as min_state_list
         for st in self.states:
@@ -146,7 +146,7 @@ class DFA:
                 a.is_end = True
                 min_state_list.append(a)
                 mindfa_origstates.append(a.original)
-                
+
             elif equals_not and st == equals_not[0]:
                 a = State('q' + str(len(min_state_list)))
                 a.original = equals_not    #list of original dfa states
@@ -154,7 +154,7 @@ class DFA:
                 a.is_end = False
                 min_state_list.append(a)
                 mindfa_origstates.append(a.original)
-                
+
             elif st not in equals_last and st not in equals_not:
                 a = State('q' + str(len(min_state_list)))
                 a.original = [st]    #list of original dfa states
@@ -162,14 +162,14 @@ class DFA:
                 a.is_end = st.is_end
                 min_state_list.append(a)
                 mindfa_origstates.append(a.original)
-        
+
         last = []
         for s in min_state_list:
             if s.is_end:
                 last.append(s)
             if self.initial in s.original:
                 first = s
-        
+
             for i in self.alphabet:
                 trans = s.transitions.get(i)
                 if trans:
@@ -214,7 +214,7 @@ class DFA:
                 elif not valid:
                     #if choises is empty and looking for negative
                     x = draw(st.sampled_from([x for x in DIGITS if x not in self.alphabet]))
-                    
+
             # If there's nothing better, keep making valid moves.
             if x is None and self.valid[s]:
                 x = draw(st.sampled_from(self.valid[s]))
@@ -240,13 +240,13 @@ class DFA:
 def regex_to_DFA(regex):
     nfa = NFA(*regex_to_NFAb(regex))
     nfa.calcEclosure()
-    
+
     dfa = nfa.NFAtoDFA()
-    
+
     min_dfa = dfa.minimize()
-    
+
     return min_dfa
-    
+
 
 if __name__ == '__main__':
     while True:
@@ -257,14 +257,13 @@ if __name__ == '__main__':
         #print("==== ΝFA ====")
         #print(nfa)
         #print()
-        
+
         dfa = nfa.NFAtoDFA()
         print("==== DFA ====")
         print(dfa)
         print()
-        
+
         s = dfa.minimize()
         print("==== min DFA ====")
         print(s)
         print()
-

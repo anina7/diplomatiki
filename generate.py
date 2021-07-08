@@ -58,20 +58,17 @@ def test(dfa, test_only=None):
 if __name__ == '__main__':
     while True:
         regex = str(input())
-        
+
         if regex == 'EXIT':
             exit()
-        
+
         while not regex:
             #print()
             regex = str(input("Please give valid regex: "))
-        
+
         dfa = regex_to_DFA(regex)
         print("Testing DFA:")
         print(dfa)
         print()
-        
+
         test(dfa)
-        
-        
-        
