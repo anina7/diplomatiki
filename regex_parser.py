@@ -3,7 +3,7 @@
 # Token, Lexer, Parser, Nodes from https://github.com/davidcallanan/py-myopl-code
 # Conversion to NFA from https://github.com/xysun/regex (Handler)
 
-DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz'
+DIGITS = '0123456789'   #abcdefghijklmnopqrstuvwxyz
 ILLEGAL = '#'
 SYMBOLS = '|*+()'
 

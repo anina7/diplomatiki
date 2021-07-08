@@ -32,6 +32,8 @@ class NFA:
                 st_list += [t for t in curr.epsilon if t not in st_list]
 
     def NFAtoDFA(self):
+        self.calcEclosure()      # first and foremost calculate e-closure
+    
         state_list = []
         last = []
         is_first = True
@@ -250,7 +252,6 @@ class DFA:
 
 def regex_to_DFA(regex):
     nfa = NFA(*regex_to_NFAb(regex))
-    nfa.calcEclosure()
 
     dfa = nfa.NFAtoDFA()
 
@@ -258,13 +259,12 @@ def regex_to_DFA(regex):
 
     return min_dfa
 
-
+'''
 if __name__ == '__main__':
     while True:
         regex = str(input())
 
         nfa = NFA(*regex_to_NFAb(regex))
-        nfa.calcEclosure()
         #print("==== ΝFA ====")
         #print(nfa)
         #print()
@@ -278,3 +278,4 @@ if __name__ == '__main__':
         print("==== min DFA ====")
         print(s)
         print()
+'''
