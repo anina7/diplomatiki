@@ -112,18 +112,19 @@ class DFA:
             else:
                 T.append((c[0], c[1]))
         
+        S.reverse()     #reverse list to start from last    #bug for 0110 due to (delta0, delta1) not yet in T
         Sremove = []
         for c in S:
             for i in self.alphabet:
                 delta0 = self.transition[c[0]].get(i)
                 delta1 = self.transition[c[1]].get(i)
                 
-                if (delta0, delta1) in T or (delta1, delta0) in T or (delta0 and not delta1) or (not delta0 and delta1):  #not delta0 or not delta1 or 
+                if (delta0, delta1) in T or (delta1, delta0) in T or (delta0 and not delta1) or (not delta0 and delta1): 
                     Sremove.append(c)
                     T.append(c)
                     break
         
-        unpackS = list(itertools.chain(*[x for x in S if x not in Sremove]))
+        unpackS = list(itertools.chain(*[x for x in S if x not in Sremove]))    #all states left in S after removal
         equals_last = [x for x in unpackS if x.is_end]
         equals_not = [x for x in unpackS if not x.is_end]
         
