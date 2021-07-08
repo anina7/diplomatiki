@@ -4,6 +4,7 @@
 # Conversion to NFA from https://github.com/xysun/regex (Handler)
 
 DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz'
+ILLEGAL = '#'
 SYMBOLS = '|*+()'
 
 # TOKENS

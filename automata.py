@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from regex_parser import DIGITS, State, regex_to_NFAb
+from regex_parser import ILLEGAL, State, regex_to_NFAb
 import hypothesis.strategies as st
 import itertools
 
@@ -94,9 +94,13 @@ class DFA:
         self.initial = initial
         self.final = final
 
-        self.transition = {s: {i: s.transitions.get(i) for i in alphabet if s.transitions.get(i)} for s in states}
-        self.valid = {s: [i for i in alphabet if s.transitions.get(i)] for s in states}
-        self.invalid = {s: [i for i in alphabet if not s.transitions.get(i)] for s in states}
+        self.transition = {s: {i: s.transitions.get(i)
+            for i in alphabet if s.transitions.get(i)} for s in states}
+        self.valid = {s: [i for i in alphabet if s.transitions.get(i)]
+            for s in states}
+        self.invalid = {s: [i for i in alphabet if not s.transitions.get(i)]
+                                + list(ILLEGAL)
+            for s in states}
 
     def __str__(self):
         L = ["\t".join([""] + [str(x) for x in self.alphabet] + ["-|", "|-"])]
@@ -195,14 +199,19 @@ class DFA:
         i = 0
         while True:
             x = None
+            assert s is not None or not valid
             # Keep this state, if it is good, in case nothing better is found.
             if valid and s in self.final or not valid and s not in self.final:
                 last_good = i
             # If we're past the designated moves, stop with the last good state.
             if last_good is not None and i >= len(transitions):
                 break
+            # If we're in a non-existent state (already generated a negative
+            # example), keep adding symbols.
+            elif s is None:
+                x = draw(st.sampled_from(self.alphabet))
             # If we're good to stop with one final move, do it.
-            if i >= len(transitions)-1:
+            elif i >= len(transitions)-1:
                 if valid:
                     choices = sorted(x for x, t in self.transition[s].items()
                                        if t in self.final)
@@ -211,13 +220,14 @@ class DFA:
                                        if t not in self.final) + self.invalid[s]
                 if choices:
                     x = draw(st.sampled_from(choices))
-                elif not valid:
-                    #if choises is empty and looking for negative
-                    x = draw(st.sampled_from([x for x in DIGITS if x not in self.alphabet]))
 
             # If there's nothing better, keep making valid moves.
             if x is None and self.valid[s]:
                 x = draw(st.sampled_from(self.valid[s]))
+            # If there's nothing better and we need a negative example,
+            # make an invalid move.
+            if x is None and not valid and self.invalid[s]:
+                x = draw(st.sampled_from(self.invalid[s]))
             # If there's no move to be made, give up.
             if x is None:
                 break
@@ -226,7 +236,8 @@ class DFA:
                 transitions[i] = x
             else:
                 transitions.append(x)
-            s = self.transition[s].get(x)
+            if s is not None:
+                s = self.transition[s].get(x)
             i += 1
         # If we failed, return None.
         if last_good is None:
