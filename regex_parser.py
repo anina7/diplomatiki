@@ -3,6 +3,7 @@
 # Token, Lexer, Parser, Nodes from https://github.com/davidcallanan/py-myopl-code
 
 DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz'
+SYMBOLS = '|*+()'
 
 # TOKENS
 TT_EOF      = 'EOF'
@@ -60,7 +61,10 @@ class Lexer:
             elif self.current_char == ')':
                 tokens.append(Token(TT_RPAREN))
                 self.advance()
-
+            else:
+                #error handling
+                assert (self.current_char in DIGITS and self.current_char in SYMBOLS),  "invalid character '{}'".format(self.current_char)
+                
         return tokens
 
     def get_ab(self, tokens):
