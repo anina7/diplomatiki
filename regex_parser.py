@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Token, Lexer, Parser, Nodes from https://github.com/davidcallanan/py-myopl-code
+# Conversion to NFA from https://github.com/xysun/regex (Handler)
 
 DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz'
 SYMBOLS = '|*+()'
@@ -190,10 +191,12 @@ class Parser:
 class State:
     def __init__(self, name):
         self.name = name
-        self.epsilon = []       # epsilon-closure / only for nfa
+        self.epsilon = []       # only for nfa: epsilon transitions
         self.transitions = {}   # char : state
         self.is_end = False
-        self.original = []      #only for dfa
+        
+        self.eclosure = []      # only for nfa: e-closure
+        self.original = []      # only for dfa
 
     def __str__(self):
         return self.name

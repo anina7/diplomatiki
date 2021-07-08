@@ -23,12 +23,20 @@ class NFA:
             ))
         return "\n".join(L)
 
+    def calcEclosure(self):
+        for s in self.states:
+            st_list = [s]
+            while st_list != []:
+                curr = st_list.pop(0)
+                s.eclosure.append(curr)
+                st_list += [t for t in curr.epsilon if t not in st_list]
+
     def NFAtoDFA(self):
         state_list = []
         last = []
         is_first = True
 
-        dfa_states = [self.initial.epsilon+[self.initial]]
+        dfa_states = [self.initial.eclosure]
 
         incr = 0
         while incr < len(dfa_states):
@@ -42,7 +50,7 @@ class NFA:
                 for s in current:  # for every state in the e-closure
                     trans = s.transitions.get(i)
                     if trans:
-                        lista += [trans] + trans.epsilon
+                        lista += trans.eclosure
 
                     if s.is_end:
                         is_last = True
@@ -231,8 +239,7 @@ class DFA:
 
 def regex_to_DFA(regex):
     nfa = NFA(*regex_to_NFAb(regex))
-    #print(nfa)
-    #print()
+    nfa.calcEclosure()
     
     dfa = nfa.NFAtoDFA()
     
@@ -246,6 +253,10 @@ if __name__ == '__main__':
         regex = str(input())
 
         nfa = NFA(*regex_to_NFAb(regex))
+        nfa.calcEclosure()
+        #print("==== ΝFA ====")
+        #print(nfa)
+        #print()
         
         dfa = nfa.NFAtoDFA()
         print("==== DFA ====")
