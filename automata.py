@@ -147,9 +147,9 @@ class DFA:
         for st in self.states:
             unpack = list(itertools.chain(*[c for c in newS if st in c]))
             if unpack:
-                equals[st] = list(set(unpack))
+                equals[st] = list(set(unpack))  #remove duplicates
             else:
-                equals[st] = [st]
+                equals[st] = [st]   #if state has no equals, it is equal to itself
         
         # remove equals for all equal states but 1
         for st in self.states:
