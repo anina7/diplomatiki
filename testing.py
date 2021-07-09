@@ -1,13 +1,13 @@
 import sys
 import hypothesis.strategies as st
-from hypothesis import given, settings
+from hypothesis import given, settings, HealthCheck
 
 from regex_parser import DIGITS
 from automata import DFA, regex_to_DFA
 from generate import positive, negative
 
 @st.composite
-def gen_regex(draw, max=5):
+def gen_regex(draw, max=10):
     regex = draw(st.lists(st.just(None), min_size=1, max_size=max))
     
     paren_counter = 0
@@ -28,21 +28,18 @@ def gen_regex(draw, max=5):
         elif regex[i-1]=='(':
             regex[i] = draw(st.text(alphabet=DIGITS, min_size=1, max_size=1))
         else:
-            regex[i] = draw(st.text(alphabet=DIGITS+'|*+('+PAREN, min_size=1, max_size=1))
+           regex[i] = draw(st.text(alphabet=DIGITS+'|*+('+PAREN, min_size=1, max_size=1))
         
         if regex[i] == '(':
             paren_counter += 1
         if regex[i] == ')':
             paren_counter -= 1
-
-    #if alt is last symbol, discard it
-    if regex[-1] == '|':
-        regex.pop()
     
-    #while parenthesis is last symbol, discard it
-    while regex[-1] == '(':
+    #while alt or parenthesis is last symbol, discard it
+    while regex[-1] == '|' or regex[-1] == '(':
+        if regex[-1] == '(':
+            paren_counter -= 1
         regex.pop()
-        paren_counter -= 1
     
     #close all opened paretheses
     while paren_counter > 0:
@@ -51,13 +48,14 @@ def gen_regex(draw, max=5):
         
     return "".join(regex)
 
-@settings(deadline=1000)
+@settings(deadline=None)
 @given(r=gen_regex())
 def test_test(r):
     print(r)
     dfa = regex_to_DFA(r)
 
-    @given(s=positive(dfa, max_size=20))
+    @settings(suppress_health_check=HealthCheck.all())
+    @given(s=positive(dfa, max_size=30))
     def test_positive(s):
         t = "".join(s)
         if print_it: print("    ", t)
@@ -65,7 +63,8 @@ def test_test(r):
         assert dfa.accepts(t), \
             "Generated string \"{}\" does not match regexp {}".format(t, r)
 
-    @given(s=negative(dfa, max_size=20))
+    @settings(suppress_health_check=HealthCheck.all())
+    @given(s=negative(dfa, max_size=30))
     def test_negative(s):
         t = "".join(s)
         if print_it: print("    ", t)
@@ -75,7 +74,6 @@ def test_test(r):
     
     test_positive()
     test_negative()
-    print('pass')
 
 #@given(r=gen_regex())
 #def test_regex(r):

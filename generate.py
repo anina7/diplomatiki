@@ -3,7 +3,7 @@
 from collections import Counter
 
 from hypothesis import given
-from hypothesis import settings, Phase, Verbosity
+from hypothesis import settings, HealthCheck, Phase, Verbosity
 import hypothesis.strategies as st
 
 from automata import regex_to_DFA, DFA
@@ -18,6 +18,7 @@ def negative(draw, dfa, max_size=None):
 
 def test(dfa, test_only=None):
     all_positive = []
+    @settings(suppress_health_check=HealthCheck.all())
     @given(s=positive(dfa))
     #@settings(phases=[Phase.generate, Phase.shrink])
     def test_positive(s):
@@ -25,6 +26,7 @@ def test(dfa, test_only=None):
         assert dfa.accepts(s)
 
     all_negative = []
+    @settings(suppress_health_check=HealthCheck.all())
     @given(s=negative(dfa))
     #@settings(phases=[Phase.generate, Phase.shrink])
     def test_negative(s):

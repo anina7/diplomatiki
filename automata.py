@@ -141,37 +141,34 @@ class DFA:
                     T.append(c)
                     break
 
-        unpackS = list(itertools.chain(*[x for x in S if x not in Sremove]))    #all states left in S after removal
-        equals_last = [x for x in unpackS if x.is_end]
-        equals_not = [x for x in unpackS if not x.is_end]
-
+        newS = [c for c in S if c not in Sremove]    #all states left in S after removal
+        
+        equals = {}
+        for st in self.states:
+            unpack = list(itertools.chain(*[c for c in newS if st in c]))
+            if unpack:
+                equals[st] = list(set(unpack))
+            else:
+                equals[st] = [st]
+        
+        # remove equals for all equal states but 1
+        for st in self.states:
+            if equals[st]:
+                for tmp in equals[st]:
+                    if tmp != st:
+                        equals[tmp] = []
+        
         min_state_list = []     #list of new states for minimized dfa
         mindfa_origstates = []  #original states in the same order as min_state_list
         for st in self.states:
-            if equals_last and st == equals_last[0]:
+            if equals[st]:
                 a = State('q' + str(len(min_state_list)))
-                a.original = equals_last    #list of original dfa states
+                a.original = equals[st]    #list of original dfa states
                 a.transitions = {x: self.transition[s].get(x) for x in self.alphabet for s in a.original}
-                a.is_end = True
+                a.is_end = any([s.is_end for s in a.original])
                 min_state_list.append(a)
                 mindfa_origstates.append(a.original)
-
-            elif equals_not and st == equals_not[0]:
-                a = State('q' + str(len(min_state_list)))
-                a.original = equals_not    #list of original dfa states
-                a.transitions = {x: self.transition[s].get(x) for x in self.alphabet for s in a.original}
-                a.is_end = False
-                min_state_list.append(a)
-                mindfa_origstates.append(a.original)
-
-            elif st not in equals_last and st not in equals_not:
-                a = State('q' + str(len(min_state_list)))
-                a.original = [st]    #list of original dfa states
-                a.transitions = self.transition[st]
-                a.is_end = st.is_end
-                min_state_list.append(a)
-                mindfa_origstates.append(a.original)
-
+        
         last = []
         for s in min_state_list:
             if s.is_end:
@@ -186,7 +183,7 @@ class DFA:
                     s.transitions[i] = min_state_list[j]
                 else:
                     s.transitions[i] = ""
-
+        
         return DFA(min_state_list, self.alphabet, first, last)
 
     def accepts(self, input):
@@ -262,15 +259,14 @@ def regex_to_DFA(regex):
 
     return min_dfa
 
-'''
 if __name__ == '__main__':
     while True:
         regex = str(input())
 
         nfa = NFA(*regex_to_NFAb(regex))
-        #print("==== ΝFA ====")
-        #print(nfa)
-        #print()
+        print("==== ΝFA ====")
+        print(nfa)
+        print()
 
         dfa = nfa.NFAtoDFA()
         print("==== DFA ====")
@@ -281,4 +277,3 @@ if __name__ == '__main__':
         print("==== min DFA ====")
         print(s)
         print()
-'''
