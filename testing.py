@@ -1,14 +1,15 @@
 import re
+import sys
 import hypothesis.strategies as st
-from hypothesis import given
+from hypothesis import given, settings
 
 from regex_parser import DIGITS
 from automata import DFA, regex_to_DFA
 from generate import positive, negative
 
 @st.composite
-def gen_regex(draw):
-    regex = draw(st.lists(st.just(None), min_size=1, max_size=None))
+def gen_regex(draw, max=10):
+    regex = draw(st.lists(st.just(None), min_size=1, max_size=max))
     
     paren_counter = 0
     
@@ -39,8 +40,8 @@ def gen_regex(draw):
     if regex[-1] == '|':
         regex.pop()
     
-    #if parenthesis is last symbol, discard it
-    if regex[-1] == '(':
+    #while parenthesis is last symbol, discard it
+    while regex[-1] == '(':
         regex.pop()
         paren_counter -= 1
     
@@ -51,25 +52,27 @@ def gen_regex(draw):
         
     return "".join(regex)
 
+@settings(deadline=None)
 @given(r=gen_regex())
 def test_test(r):
+    print(r)
     dfa = regex_to_DFA(r)
 
-    @given(s=positive(dfa))
+    @given(s=positive(dfa, max_size=20))
     def test_positive(s):
         t = "".join(s)
-        # Check if s matches r.
-        assert re.match(r"^" + r + "$", t), \
+        if print_it: print("    ", t)
+        # Check if t accepted by r.
+        assert dfa.accepts(t), \
             "Generated string \"{}\" does not match regexp {}".format(t, r)
-        #print(s)
 
-    @given(s=negative(dfa))
+    @given(s=negative(dfa, max_size=20))
     def test_negative(s):
         t = "".join(s)
-        # Check if s doesn't match r.
-        assert not re.match(r"^" + r + "$", t), \
+        if print_it: print("    ", t)
+        # Check if t not accepted by r.
+        assert not dfa.accepts(t), \
             "Generated string \"{}\" matches regexp {}".format(t, r)
-        #print(s)
     
     test_positive()
     test_negative()
@@ -80,4 +83,10 @@ def test_test(r):
 #    print(r)
 
 if __name__ == '__main__':
+    n = len(sys.argv)
+    print_it = False
+    if n == 2 and sys.argv[1]=='print':
+        print_it = True
+    
     test_test()
+    print('passed all tests!')

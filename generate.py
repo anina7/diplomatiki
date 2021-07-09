@@ -9,12 +9,12 @@ import hypothesis.strategies as st
 from automata import regex_to_DFA, DFA
 
 @st.composite
-def positive(draw, dfa):
-    return dfa.generate(draw, True)
+def positive(draw, dfa, max_size=None):
+    return dfa.generate(draw, True, max_size)
 
 @st.composite
-def negative(draw, dfa):
-    return dfa.generate(draw, False)
+def negative(draw, dfa, max_size=None):
+    return dfa.generate(draw, False, max_size)
 
 def test(dfa, test_only=None):
     all_positive = []
