@@ -12,14 +12,16 @@ def gen_regex(draw, max=10):
     
     paren_counter = 0
     
-    regex[0] = draw(st.text(alphabet=DIGITS, min_size=1, max_size=1))
-    for i in range(1, len(regex)):
+    regex[0] = draw(st.text(alphabet=DIGITS+'(', min_size=1, max_size=1))
+    if regex[0] == '(':
+            paren_counter += 1
+    for i in range(1, len(regex)):        
         if paren_counter > 0:
             PAREN = ')'
         else:
             PAREN = ''
         
-        if regex[i-1] in DIGITS or regex[i-1]==')':
+        if regex[i-1] in DIGITS:
             regex[i] = draw(st.text(alphabet=DIGITS+'|*+'+PAREN, min_size=1, max_size=1))
         elif regex[i-1]=='|':
             regex[i] = draw(st.text(alphabet=DIGITS+'(', min_size=1, max_size=1))
@@ -27,16 +29,18 @@ def gen_regex(draw, max=10):
             regex[i] = draw(st.text(alphabet=DIGITS+'|('+PAREN, min_size=1, max_size=1))
         elif regex[i-1]=='(':
             regex[i] = draw(st.text(alphabet=DIGITS, min_size=1, max_size=1))
+        elif regex[i-1]==')':
+            regex[i] = draw(st.text(alphabet='*+', min_size=1, max_size=1))
         else:
-           regex[i] = draw(st.text(alphabet=DIGITS+'|*+('+PAREN, min_size=1, max_size=1))
+            regex[i] = draw(st.text(alphabet=DIGITS+'|*+('+PAREN, min_size=1, max_size=1))
         
         if regex[i] == '(':
             paren_counter += 1
         if regex[i] == ')':
             paren_counter -= 1
-    
+
     #while alt or parenthesis is last symbol, discard it
-    while regex[-1] == '|' or regex[-1] == '(':
+    while regex and (regex[-1] == '|' or regex[-1] == '('):
         if regex[-1] == '(':
             paren_counter -= 1
         regex.pop()
@@ -45,7 +49,11 @@ def gen_regex(draw, max=10):
     while paren_counter > 0:
         regex.append(')')
         paren_counter -= 1
-        
+    
+    #if empty, try again
+    if not regex:
+        regex = draw(gen_regex())
+    
     return "".join(regex)
 
 @settings(deadline=None)
