@@ -27,6 +27,7 @@ equivalent DFA, positive test-cases, negative test-cases
 regex_parser.py holds the parser and NFAbuilder  
 automata.py holds NFA and DFA classes, NFAtoDFA method, DFA.minimize method, DFA.generate method
 generate.py runs and prints test-cases
+testing.py tests DFA.generate method
 
 ## Supported regular expressions
 |Regular expressions|Symbols|

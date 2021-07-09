@@ -33,7 +33,7 @@ class NFA:
 
     def NFAtoDFA(self):
         self.calcEclosure()      # first and foremost calculate e-closure
-    
+        
         state_list = []
         last = []
         is_first = True
@@ -57,6 +57,9 @@ class NFA:
                     if s.is_end:
                         is_last = True
 
+                #remove duplicates
+                lista = list(set(lista))
+                
                 # this is transition for input 'i' for current state
                 dict[i] = lista
 

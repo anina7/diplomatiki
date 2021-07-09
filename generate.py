@@ -10,11 +10,11 @@ from automata import regex_to_DFA, DFA
 
 @st.composite
 def positive(draw, dfa, max_size=None):
-    return dfa.generate(draw, True, max_size)
+    return dfa.generate(draw, True, max_size=max_size)
 
 @st.composite
 def negative(draw, dfa, max_size=None):
-    return dfa.generate(draw, False, max_size)
+    return dfa.generate(draw, False, max_size=max_size)
 
 def test(dfa, test_only=None):
     all_positive = []

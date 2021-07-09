@@ -1,4 +1,3 @@
-import re
 import sys
 import hypothesis.strategies as st
 from hypothesis import given, settings
@@ -8,7 +7,7 @@ from automata import DFA, regex_to_DFA
 from generate import positive, negative
 
 @st.composite
-def gen_regex(draw, max=10):
+def gen_regex(draw, max=5):
     regex = draw(st.lists(st.just(None), min_size=1, max_size=max))
     
     paren_counter = 0
@@ -52,7 +51,7 @@ def gen_regex(draw, max=10):
         
     return "".join(regex)
 
-@settings(deadline=None)
+@settings(deadline=1000)
 @given(r=gen_regex())
 def test_test(r):
     print(r)
@@ -89,4 +88,4 @@ if __name__ == '__main__':
         print_it = True
     
     test_test()
-    print('passed all tests!')
+    print('Passed all tests!')
