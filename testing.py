@@ -32,7 +32,7 @@ def gen_regex(draw, max=10):
         elif regex[i-1]=='(':
             regex += draw(st.sampled_from(DIGITS))
         elif regex[i-1]==')':
-            regex += draw(st.sampled_from('*+'))
+            regex += draw(st.sampled_from('|*+'))
         else:
             regex += draw(st.sampled_from(DIGITS+'|*+('+PAREN))
         
@@ -64,7 +64,7 @@ def test_test(r):
     print(r)
     dfa = regex_to_DFA(r)
 
-    #@settings(suppress_health_check=HealthCheck.all())
+    @settings(suppress_health_check=HealthCheck.all())
     @given(s=positive(dfa, max_size=30))
     def test_positive(s):
         t = ''.join(s)
@@ -73,7 +73,7 @@ def test_test(r):
         assert re.match(r"^"+str(r)+"$", t), \
             'Generated string \'{}\' does not match regexp {}'.format(t, r)
     
-    #@settings(suppress_health_check=HealthCheck.all())
+    @settings(suppress_health_check=HealthCheck.all())
     @given(s=negative(dfa, max_size=30))
     def test_negative(s):
         t = ''.join(s)
