@@ -65,7 +65,6 @@ if __name__ == '__main__':
             exit()
 
         while not regex:
-            #print()
             regex = str(input("Please give valid regex: "))
 
         dfa = regex_to_DFA(regex)

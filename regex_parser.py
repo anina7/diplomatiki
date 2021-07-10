@@ -45,7 +45,7 @@ class Lexer:
             if self.current_char in DIGITS:
                 tokens.append(Token(TT_CHAR, self.current_char))
                 self.advance()
-            #elif self.current_char == '\x08':
+            #elif self.current_char == '\b':
             #    tokens.append(Token(TT_CONCAT))
             #    self.advance()
             elif self.current_char == '|':
