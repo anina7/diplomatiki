@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from regex_parser import ILLEGAL, State, regex_to_NFAb
+from regex_parser import ILLEGAL, DFAState, regex_to_NFAb
 import hypothesis.strategies as st
 import itertools
 
@@ -67,7 +67,7 @@ class NFA:
                 if lista and lista not in dfa_states:
                     dfa_states.append(lista)
 
-            a = State('t' + str(len(state_list)))
+            a = DFAState('t' + str(len(state_list)))
             a.original = current    #list of original nfa states
             a.transitions = dict
             a.is_end = is_last
@@ -162,7 +162,7 @@ class DFA:
         mindfa_origstates = []  #original states in the same order as min_state_list
         for st in self.states:
             if equals[st]:
-                a = State('q' + str(len(min_state_list)))
+                a = DFAState('q' + str(len(min_state_list)))
                 a.original = equals[st]    #list of original dfa states
                 a.transitions = {x: self.transition[s].get(x) for x in self.alphabet for s in a.original}
                 a.is_end = any([s.is_end for s in a.original])

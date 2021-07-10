@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis import settings, HealthCheck, Phase, Verbosity
 import hypothesis.strategies as st
 
-from automata import regex_to_DFA, DFA
+from automata import regex_to_DFA
 
 @st.composite
 def positive(draw, dfa, max_size=None):
@@ -39,8 +39,8 @@ def test(dfa, test_only=None):
         c = Counter(all_positive)
         for k in sorted(c):
             print("{}: {} times".format(k, c[k]))
-        print(len(all_positive), "testcase(s) generated")
-        print(len(set(all_positive)), "unique testcase(s)")
+        print(len(all_positive), "test-case(s) generated")
+        print(len(set(all_positive)), "unique test-case(s)")
         print(max(map(len, all_positive)), "max length")
         print(sum(map(len, all_positive))/len(all_positive), "avg length")
         print()
@@ -51,8 +51,8 @@ def test(dfa, test_only=None):
         c = Counter(all_negative)
         for k in sorted(c):
             print("{}: {} times".format(k, c[k]))
-        print(len(all_negative), "testcase(s) generated")
-        print(len(set(all_negative)), "unique testcase(s)")
+        print(len(all_negative), "test-case(s) generated")
+        print(len(set(all_negative)), "unique test-case(s)")
         print(max(map(len, all_negative)), "max length")
         print(sum(map(len, all_negative))/len(all_negative), "avg length")
         print()

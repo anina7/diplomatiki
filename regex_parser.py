@@ -192,12 +192,8 @@ class Parser:
 class State:
     def __init__(self, name):
         self.name = name
-        self.epsilon = []       # only for nfa: epsilon transitions
-        self.transitions = {}   # char : state
+        self.transitions = {}   # dictionary (char : state)
         self.is_end = False
-
-        self.eclosure = []      # only for nfa: e-closure
-        self.original = []      # only for dfa
 
     def __str__(self):
         return self.name
@@ -205,10 +201,21 @@ class State:
     def __repr__(self):
         return str(self)
 
+class NFAState(State):
+    def __init__(self, name):
+        State.__init__(self, name)
+        self.epsilon = []       # epsilon transitions
+        self.eclosure = []      # e-closure -> where you land after 0-infinite epsilon transitions
+
+class DFAState(State):
+    def __init__(self, name):
+        State.__init__(self, name)
+        self.original = []      # previous name(s) in NFA or prev DFA
+
 class NFAbuilder:
     def __init__(self, start, end):
         self.start = start
-        self.end = end # start and end states
+        self.end = end
         end.is_end = True
 
 class NodeVisitor():
@@ -221,9 +228,9 @@ class NodeVisitor():
         raise Exception(f'No visit_{type(node).__name__} method defined')
 
     def visit_CharNode(self, node, nfa_stack, state_list):
-        a = State('s' + str(len(state_list)))
+        a = NFAState('s' + str(len(state_list)))
         state_list.append(a)
-        b = State('s' + str(len(state_list)))
+        b = NFAState('s' + str(len(state_list)))
         state_list.append(b)
 
         a.transitions[node.value] = b
@@ -244,11 +251,11 @@ class NodeVisitor():
             nfa_stack.append(nfab)
 
         elif node.op_tok.type == TT_ALT:
-            x = State('s' + str(len(state_list)))
+            x = NFAState('s' + str(len(state_list)))
             state_list.append(x)
             x.epsilon = [a.start, b.start]
 
-            y = State('s' + str(len(state_list)))
+            y = NFAState('s' + str(len(state_list)))
             state_list.append(y)
 
             a.end.epsilon.append(y)
@@ -262,10 +269,10 @@ class NodeVisitor():
         self.visit(node.left, nfa_stack, state_list)
 
         a = nfa_stack.pop()
-        x = State('s' + str(len(state_list)))
+        x = NFAState('s' + str(len(state_list)))
         state_list.append(x)
 
-        y = State('s' + str(len(state_list)))
+        y = NFAState('s' + str(len(state_list)))
         state_list.append(y)
 
         x.epsilon = [a.start]

@@ -4,7 +4,7 @@ import hypothesis.strategies as st
 from hypothesis import given, settings, HealthCheck
 
 from regex_parser import DIGITS
-from automata import DFA, regex_to_DFA
+from automata import regex_to_DFA
 from generate import positive, negative
 
 @st.composite
