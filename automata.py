@@ -259,6 +259,7 @@ def regex_to_DFA(regex):
 
     return min_dfa
 
+'''
 if __name__ == '__main__':
     while True:
         regex = str(input())
@@ -277,3 +278,4 @@ if __name__ == '__main__':
         print("==== min DFA ====")
         print(s)
         print()
+'''
