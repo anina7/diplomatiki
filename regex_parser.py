@@ -77,29 +77,54 @@ class Lexer:
         return sorted(set(alphabet))
 
 #NODES
-class CharNode:
+class RegExpNode:
+    def __repr__(self):
+        return self.to_string(0)
+
+    @staticmethod
+    def paren(b, s):
+        return f'({s})' if b else s
+
+class CharNode(RegExpNode):
     def __init__(self, value):
         self.value = value
 
-    def __repr__(self):
+    def to_string(self, p):
         return f'{self.value}'
 
-class BinOpNode:
+class BinOpNode(RegExpNode):
+    prio = {
+        TT_CONCAT: 2,
+        TT_ALT: 1,
+    }
+
     def __init__(self, left, op_tok, right):
         self.left = left
         self.op_tok = op_tok
         self.right = right
 
-    def __repr__(self):
-        return f'({self.left}, {self.op_tok}, {self.right})'
+    def to_string(self, p):
+        op = "|" if self.op_tok.type == TT_ALT else ""
+        return RegExpNode.paren(p > BinOpNode.prio[self.op_tok.type],
+            self.left.to_string(BinOpNode.prio[self.op_tok.type]) + op +
+            self.right.to_string(BinOpNode.prio[self.op_tok.type]+1)
+        )
 
-class UnaryOpNode:
+class UnaryOpNode(RegExpNode):
+    prio = {
+        TT_STAR: 3,
+        TT_PLUS: 3,
+    }
+
     def __init__(self, left, op_tok):
         self.left = left
         self.op_tok = op_tok
 
-    def __repr__(self):
-        return f'({self.left}, {self.op_tok})'
+    def to_string(self, p):
+        op = "*" if self.op_tok.type == TT_STAR else "+"
+        return RegExpNode.paren(p > UnaryOpNode.prio[self.op_tok.type],
+            self.left.to_string(UnaryOpNode.prio[self.op_tok.type]) + op
+        )
 
 '''
 GRAMMAR:
