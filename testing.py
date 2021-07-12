@@ -44,7 +44,9 @@ def test_test(r):
         # Check if t not recognized by r.
         #re.match does not work here (tries to match first instance)
         assert not dfa.accepts(t), \
-            'Generated string \'{}\' does not match regexp {}'.format(t, str(r))
+            'Generated string \'{}\' does matches regexp {}'.format(t, str(r))
+        #assert not re.match(r"^("+str(r)+")$", t), \
+        #    "Generated string \"{}\" does matches regexp {}".format(t, str(r))
 
     test_positive()
     test_negative()
