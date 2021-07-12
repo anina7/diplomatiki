@@ -123,7 +123,7 @@ class UnaryOpNode(RegExpNode):
     def to_string(self, p):
         op = "*" if self.op_tok.type == TT_STAR else "+"
         return RegExpNode.paren(p > UnaryOpNode.prio[self.op_tok.type],
-            self.left.to_string(UnaryOpNode.prio[self.op_tok.type]) + op
+            self.left.to_string(UnaryOpNode.prio[self.op_tok.type] + 1) + op
         )
 
 '''
@@ -325,24 +325,3 @@ def regex_to_NFAb(regex):
     final = [str(s) for s in state_list if s.is_end]
 
     return state_list, alphabet, nfab.start, final
-
-'''
-if __name__ == '__main__':
-    while True:
-        regex = str(input())
-        state_list, initial = regex_to_NFA(regex)
-
-        final = [s for s in state_list if s.is_end]
-
-        nfaPrint = NFAprint(state_list, alphabet, initial, final)
-        print(nfaPrint)
-        print()
-
-
-        print("#### NFA ####")
-        print("states:", state_list)
-        print("alphabet:", alphabet)
-        print("initial:", initial)
-        print("final:", final)
-        print()
-'''

@@ -31,8 +31,10 @@ def test_test(r):
         t = ''.join(s)
         if print_it: print('    ', t)
         # Check if t recognized by r.
+        assert dfa.accepts(t), \
+            'Generated string \'{}\' does not match regexp {}'.format(t, str(r))
         assert re.match(r"^"+str(r)+"$", t), \
-            'Generated string \'{}\' does not match regexp {}'.format(t, r)
+            "Generated string \"{}\" does not match regexp {}".format(t, str(r))
 
     @settings(suppress_health_check=HealthCheck.all())
     @given(s=negative(dfa, max_size=30))
@@ -42,7 +44,7 @@ def test_test(r):
         # Check if t not recognized by r.
         #re.match does not work here (tries to match first instance)
         assert not dfa.accepts(t), \
-            'Generated string \'{}\' does not match regexp {}'.format(t, r)
+            'Generated string \'{}\' does not match regexp {}'.format(t, str(r))
 
     test_positive()
     test_negative()
