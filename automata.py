@@ -26,10 +26,12 @@ class NFA:
     def calcEclosure(self):
         for s in self.states:
             st_list = [s]
+            visited_list = [s]
             while st_list != []:
                 curr = st_list.pop(0)
                 s.eclosure.append(curr)
-                st_list += [t for t in curr.epsilon if t not in st_list]
+                st_list += [t for t in curr.epsilon if t not in st_list and t not in visited_list]
+                visited_list += [t for t in curr.epsilon if t not in visited_list]
 
     def NFAtoDFA(self):
         self.calcEclosure()      # first and foremost calculate e-closure
